@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexical Analyzer</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f7f9fc;
+            font-family: 'Arial', sans-serif;
+        }
+        h1 {
+            color: #343a40;
+        }
+        #analyzeForm {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        #results {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Table Enhancements */
+    .table {
+        margin-top: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background-color: #343a40;
+        color: white;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.01);
+        cursor: pointer;
+    }
+
+    .table tbody td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table-bordered {
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination-container {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Custom Scrollbar */
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .table-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 10px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4 animate__animated animate__fadeInDown">Lexical Analyzer</h1>
+        <form id="analyzeForm" class="mb-4 animate__animated animate__fadeIn">
+            <textarea name="sourceCode" id="sourceCode" rows="10" class="form-control mb-3" placeholder="Enter your source code here..." required></textarea>
+            <button type="submit" class="btn btn-primary w-100">Analyze Code</button>
+        </form>
+<div id="results" class="table-container">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th class="sortable">Type</th>
+                <th class="sortable">Value</th>
+                <th>Regex</th>
+                <th class="sortable">Line</th>
+                <th class="sortable">Position</th>
+            </tr>
+        </thead>
+        <tbody id="outputTable"></tbody>
+    </table>
+    <div class="pagination-container"></div>
+</div>
+
+    </div>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function () {
+        $("#analyzeForm").on("submit", function (e) {
+            e.preventDefault();
+            const sourceCode = $("#sourceCode").val();
+            const resultsDiv = $("#results");
+
+            $.post("/analyze", { sourceCode }, function (data) {
+                const tableBody = $("#outputTable");
+                tableBody.empty();
+
+                if (data.tokens) {
+                    data.tokens.forEach(token => {
+                        const row = `
+                            <tr>
+                                <td>${token.Type}</td>
+                                <td>${token.Value}</td>
+                                <td>${token.Regex}</td>
+                                <td>${token.Line}</td>
+                                <td>${token.Position}</td>
+                            </tr>
+                        `;
+                        tableBody.append(row);
+                    });
+
+                    // Add animations and show the results
+                    resultsDiv.addClass("show animate__animated animate__fadeIn");
+
+                    // Enable search and sorting
+                    enableSearchAndSorting();
+                } else if (data.error) {
+                    alert(data.error);
+                    resultsDiv.removeClass("show");
+                }
+            });
+        });
+
+        function enableSearchAndSorting() {
+            const table = $("#outputTable");
+
+            // Search functionality
+            $("#searchBox").on("input", function () {
+                const value = $(this).val().toLowerCase();
+                table.find("tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+
+            // Sort functionality
+            $("th.sortable").on("click", function () {
+                const index = $(this).index();
+                const rows = table.find("tr").toArray();
+
+                rows.sort((a, b) => {
+                    const cellA = $(a).children("td").eq(index).text().toLowerCase();
+                    const cellB = $(b).children("td").eq(index).text().toLowerCase();
+                    return cellA.localeCompare(cellB);
+                });
+
+                rows.forEach(row => table.append(row));
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
