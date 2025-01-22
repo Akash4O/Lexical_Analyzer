@@ -10,4 +10,4 @@ A web-based tool for lexical analysis with tokenization visualization and animat
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone 
+   git clone https://github.com/Akash4O/Lexical_Analyzer.git
